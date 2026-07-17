@@ -40,6 +40,14 @@ def test_credential_files_denied(path: str) -> None:
     assert _action("Read", {"file_path": path}) == Action.DENY
 
 
+def test_word_credentials_in_prose_not_denied() -> None:
+    # The bare word "credentials" in a commit/PR body is not credential-file access.
+    cmd = 'gh pr create --body "no production credentials in Actions; secret scanning on"'
+    assert _action("Bash", {"command": cmd}) == Action.PASSTHROUGH
+    commit = "git commit -m 'document credential handling'"
+    assert _action("Bash", {"command": commit}) == Action.PASSTHROUGH
+
+
 # --- LinkedIn ------------------------------------------------------------------
 def test_webfetch_linkedin_denied() -> None:
     assert _action("WebFetch", {"url": "https://www.linkedin.com/in/foo"}) == Action.DENY
