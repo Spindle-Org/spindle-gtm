@@ -22,6 +22,19 @@ Alembic, Pydantic v2, Streamlit dashboard. See `docs/IMPLEMENTATION_PLAN.md`.
    machine (Apollo call, email send) is dry-run unless `--apply` AND a batch-level human
    approval gate are both satisfied. Never add a code path that sends without approval.
 
+## Governance & delegation
+A project governance layer enforces the rules above (see `docs/runbooks/governance.md`):
+- A `PreToolUse` hook (`.claude/hooks/pretooluse_guard.py`, logic in `src/spindle_gtm/policy.py`)
+  denies credential/LinkedIn/browser-automation/Apollo-send/forbidden-git actions, forces an
+  approval prompt on Apollo writes, and logs every external-write attempt.
+- Seven subagents (`.claude/agents/`) have scoped `tools:` allowlists — delegate research to
+  `account-researcher`/`evidence-verifier`, selection to `contact-selector`, drafting to
+  `outreach-copywriter`, review to `compliance-reviewer`/`outbound-reviewer`, LOIs to `loi-preparer`.
+- Twelve skills (`.claude/skills/`) drive the workflow: `/qualify-accounts`, `/select-buying-group`,
+  `/research-batch`, `/verify-evidence`, `/draft-outreach`, `/review-outreach-batch`,
+  `/prepare-apollo-actions`, `/sync-activity`, `/prepare-discovery`, `/prepare-pilot`,
+  `/prepare-loi`, `/audit-gtm-system`.
+
 ## Working rules
 - Keep PII out of git: never commit `data/`, `db/`, `exports/`, `.env*`, or `.csv`. Test
   emails MUST use `example.com`. The `no-pii-leak` guard and CI enforce this.
