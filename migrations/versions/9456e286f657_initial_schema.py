@@ -1,7 +1,7 @@
 """initial schema
 
 Revision ID: 9456e286f657
-Revises: 
+Revises:
 Create Date: 2026-07-17 06:11:05.080086
 """
 from __future__ import annotations
