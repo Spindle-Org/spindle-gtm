@@ -1,0 +1,7 @@
+{
+  "accounts": [
+    {"id": "acc_1001", "name": "Meridian Apparel", "primary_domain": "meridian.example.com", "estimated_num_employees": 180, "industry": "Apparel & Fashion", "stage": "Cold", "country": "US", "updated_at": "2026-06-01T00:00:00Z"},
+    {"id": "acc_1002", "name": "Coastline Denim", "primary_domain": "coastline.example.com", "estimated_num_employees": 75, "industry": "Apparel & Fashion", "stage": "Cold", "country": "US", "updated_at": "2026-06-01T00:00:00Z"}
+  ],
+  "pagination": {"page": 1, "total_pages": 2}
+}

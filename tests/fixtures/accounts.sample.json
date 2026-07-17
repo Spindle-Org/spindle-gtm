@@ -1,0 +1,25 @@
+{
+  "_comment": "Synthetic fixture. All emails MUST use example.com (enforced by test_no_pii_leak).",
+  "accounts": [
+    {
+      "apollo_id": "synthetic-0001",
+      "name": "Acme Robotics",
+      "domain": "example.com",
+      "hq_country": "United States",
+      "region_code": "US",
+      "contacts": [
+        {"first_name": "Ada", "last_name": "Lovelace", "title": "VP Eng", "email": "ada@example.com"}
+      ]
+    },
+    {
+      "apollo_id": "synthetic-0002",
+      "name": "Beispiel GmbH",
+      "domain": "example.org",
+      "hq_country": "Germany",
+      "region_code": "EU",
+      "contacts": [
+        {"first_name": "Max", "last_name": "Mustermann", "title": "CTO", "email": "max@example.org"}
+      ]
+    }
+  ]
+}

@@ -1,0 +1,32 @@
+# Outreach message rules. Validated by MessageRulesConfig.
+max_subject_chars: 90
+max_body_words: 150
+max_links: 1
+require_unsubscribe: true
+require_physical_address: true
+first_email_min_words: 80
+first_email_max_words: 130
+linkedin_note_max_chars: 300
+spindle_one_liner: "Spindle is a lightweight layer that keeps product development moving across your suppliers."
+lead_ban_terms:
+  - "palo alto"
+  - stanford
+  - harvard
+  - "y combinator"
+  - mit
+forbidden_phrases:
+  - "act now"
+  - "limited time"
+  - "free money"
+  - "risk-free"
+  - "100% guaranteed"
+  - "dear sir/madam"
+  - "to whom it may concern"
+  - "game changer"
+  - "revolutionary"
+  - "world-class"
+  - "best-in-class"
+  - "synergy"
+  - "circle back"
+  - "quick question"
+  - "hope this finds you well"

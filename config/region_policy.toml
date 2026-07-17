@@ -1,0 +1,67 @@
+# Region compliance policy (docs/IMPLEMENTATION_PLAN.md §11).
+# Conservative B2B cold-outreach defaults. NOT LEGAL ADVICE — pending legal sign-off
+# (plan §15) before sending to CA / EU / APAC. Policy is data; the gate is code.
+
+[US]
+legal_basis = "CAN-SPAM"
+requires_consent = false
+unsubscribe_required = true
+physical_address_required = true
+cold_email_allowed = "yes"
+notes = "Truthful headers, physical address, honor opt-out."
+
+[CA]
+legal_basis = "CASL"
+requires_consent = true
+unsubscribe_required = true
+physical_address_required = true
+cold_email_allowed = "caution"
+notes = "Consent/implied-consent regime. Prefer linkedin_manual or documented EBR."
+
+[UK]
+legal_basis = "GDPR+PECR"
+requires_consent = false
+unsubscribe_required = true
+physical_address_required = true
+cold_email_allowed = "caution"
+notes = "Legitimate-interest basis; require LIA note; role-based addresses; easy opt-out."
+
+[EU]
+legal_basis = "GDPR+PECR"
+requires_consent = false
+unsubscribe_required = true
+physical_address_required = true
+cold_email_allowed = "caution"
+notes = "Legitimate-interest basis; require LIA note; role-based addresses; easy opt-out."
+
+[AU]
+legal_basis = "Spam Act 2003"
+requires_consent = true
+unsubscribe_required = true
+physical_address_required = true
+cold_email_allowed = "caution"
+notes = "Consent/inferred consent + unsubscribe + identification."
+
+[IN]
+legal_basis = "DPDP Act"
+requires_consent = true
+unsubscribe_required = true
+physical_address_required = true
+cold_email_allowed = "caution"
+notes = "Consent-leaning. Default linkedin_manual; HOLD email unless lawful basis recorded."
+
+[KR]
+legal_basis = "PIPA"
+requires_consent = true
+unsubscribe_required = true
+physical_address_required = true
+cold_email_allowed = "no"
+notes = "Strict consent. Default linkedin_manual; do not cold-email without recorded consent."
+
+[JP]
+legal_basis = "APPI"
+requires_consent = true
+unsubscribe_required = true
+physical_address_required = true
+cold_email_allowed = "caution"
+notes = "Consent-leaning. Default linkedin_manual; HOLD email unless lawful basis recorded."

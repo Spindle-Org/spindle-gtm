@@ -1,0 +1,14 @@
+# Per-mailbox sending limits. Validated by MailboxLimitsConfig.
+default_daily_cap: 20
+max_daily_cap: 40
+warmup_days: 14
+warmup_start_cap: 5
+min_seconds_between_sends: 90
+per_contact_frequency_days: 30
+# Tracking is off by default; enable only via an allow-listed experiment key.
+open_tracking_default: false
+click_tracking_default: false
+tracking_experiment_allowlist: []
+# Outbound gateway hard caps.
+max_contacts_per_account: 2
+max_batch_size: 50

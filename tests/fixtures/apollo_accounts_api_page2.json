@@ -1,0 +1,6 @@
+{
+  "accounts": [
+    {"id": "acc_1003", "name": "Atlas Accessories", "primary_domain": "atlas.example.com", "estimated_num_employees": 240, "industry": "Accessories", "stage": "Cold", "country": "UK", "updated_at": "2026-06-01T00:00:00Z"}
+  ],
+  "pagination": {"page": 2, "total_pages": 2}
+}

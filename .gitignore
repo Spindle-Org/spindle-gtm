@@ -1,0 +1,54 @@
+# === Security-critical: PII, secrets, exports must NEVER be committed ===
+# Local data stores (contact PII, SQLite) — only .gitkeep is tracked.
+data/**
+db/**
+exports/**
+logs/**
+outbox/**
+generated/**
+!data/.gitkeep
+!db/.gitkeep
+!exports/.gitkeep
+!logs/.gitkeep
+!outbox/.gitkeep
+!generated/.gitkeep
+
+# SQLite files anywhere
+*.db
+*.sqlite
+*.sqlite3
+
+# Secrets, env, credentials, OAuth tokens
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+credentials*.json
+!*.example
+*token*.json
+*oauth*.json
+# .mcp.json IS committed (project-scope remote MCP, URL-only). It must never contain
+# inline secrets — those belong in .env / the OAuth token store, never here.
+
+# CSV exports (Apollo pulls, contact lists)
+*.csv
+# ...except approved synthetic fixtures (example.com only; scanned by the PII guard)
+!tests/fixtures/*.csv
+
+# === Python ===
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+build/
+dist/
+
+# === OS / editor ===
+.DS_Store
+.idea/
+.vscode/

@@ -1,0 +1,47 @@
+# CLAUDE.md — spindle-gtm
+
+Guidance for Claude Code (and any agent) working in this repo. These rules are
+**binding**; they encode the safety posture in `docs/adr/0002`.
+
+## What this is
+A local, single-founder GTM engine: research accounts, gate compliance, and send
+human-approved outreach. Stack: Python 3.12 + uv, Typer CLI, SQLModel/SQLAlchemy 2,
+Alembic, Pydantic v2, Streamlit dashboard. See `docs/IMPLEMENTATION_PLAN.md`.
+
+## Non-negotiable rules
+1. **Apollo is the system of record and is READ-ONLY from this tool.** Never create or
+   update Apollo accounts, contacts, sequences, or campaigns. Read + snapshot only
+   (`apollo_id` + `fetched_at`); never write back and never treat local data as authoritative
+   over Apollo for account/contact facts.
+2. **No LinkedIn automation, ever.** LinkedIn is manual, human-in-the-loop only — no API,
+   no scraping, no automated connects/messages. You may only draft text a human sends.
+3. **Evidence is required for personalization.** Every personalized claim must reference
+   concrete evidence (source + fetched_at) stored with it. Do not invent facts about a
+   person or company to personalize a message.
+4. **Explicit human approval for every external write.** Any action that leaves the
+   machine (Apollo call, email send) is dry-run unless `--apply` AND a batch-level human
+   approval gate are both satisfied. Never add a code path that sends without approval.
+
+## Governance & delegation
+A project governance layer enforces the rules above (see `docs/runbooks/governance.md`):
+- A `PreToolUse` hook (`.claude/hooks/pretooluse_guard.py`, logic in `src/spindle_gtm/policy.py`)
+  denies credential/LinkedIn/browser-automation/Apollo-send/forbidden-git actions, forces an
+  approval prompt on Apollo writes, and logs every external-write attempt.
+- Seven subagents (`.claude/agents/`) have scoped `tools:` allowlists — delegate research to
+  `account-researcher`/`evidence-verifier`, selection to `contact-selector`, drafting to
+  `outreach-copywriter`, review to `compliance-reviewer`/`outbound-reviewer`, LOIs to `loi-preparer`.
+- Twelve skills (`.claude/skills/`) drive the workflow: `/qualify-accounts`, `/select-buying-group`,
+  `/research-batch`, `/verify-evidence`, `/draft-outreach`, `/review-outreach-batch`,
+  `/prepare-apollo-actions`, `/sync-activity`, `/prepare-discovery`, `/prepare-pilot`,
+  `/prepare-loi`, `/audit-gtm-system`.
+
+## Working rules
+- Keep PII out of git: never commit `data/`, `db/`, `exports/`, `.env*`, or `.csv`. Test
+  emails MUST use `example.com`. The `no-pii-leak` guard and CI enforce this.
+- The CLI is safe-by-default (dry-run). Preserve that: new external actions gate on `--apply`.
+- Region compliance is data (`config/region_policy.toml`) + one gate (`compliance.py`).
+  Add regions as config rows; don't scatter region logic.
+- Before committing: `uv run ruff format . && uv run ruff check . && uv run mypy && uv run pytest`.
+- Migrations: `uv run alembic revision --autogenerate -m "..."` then review the generated file.
+- Commit style: small, reviewable commits. Never push directly to `main`; open a PR.
+- Do not connect Apollo or wire up sending without an explicit instruction to do so.

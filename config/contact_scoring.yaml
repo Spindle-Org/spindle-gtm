@@ -1,0 +1,18 @@
+# Deterministic contact scoring. Validated by ContactScoringConfig.
+persona_base_scores:
+  operational_champion: 5.0
+  executive_sponsor: 4.0
+  technical_approver: 3.0
+  compliance_stakeholder: 2.0
+  excluded: 0.0
+  unknown: 0.0
+seniority_bonus:
+  chief: 2.0
+  vp: 1.5
+  director: 1.2
+  head: 1.2
+  lead: 0.8
+  manager: 0.8
+  senior: 0.5
+email_confidence_floor: 0.6
+select_threshold: 3.0

@@ -1,0 +1,44 @@
+# Manually labeled synthetic golden set: 25 contacts across 8 synthetic fashion
+# companies. Names/emails are fictional (example.com). NO protected characteristics
+# or sensitive personal data — only job titles + company context.
+contacts:
+  # --- Meridian Apparel ---
+  - {company: "Meridian Apparel", name: "A. Rivera", email: "a.rivera@example.com", title: "Director of Product Development", expected: operational_champion}
+  - {company: "Meridian Apparel", name: "B. Chen", email: "b.chen@example.com", title: "Chief Operating Officer", expected: executive_sponsor}
+  - {company: "Meridian Apparel", name: "C. Okoro", email: "c.okoro@example.com", title: "Marketing Manager", expected: excluded}
+
+  # --- Coastline Denim ---
+  - {company: "Coastline Denim", name: "D. Larsen", email: "d.larsen@example.com", title: "Head of Production", expected: operational_champion}
+  - {company: "Coastline Denim", name: "E. Moreau", email: "e.moreau@example.com", title: "Founder & CEO", expected: executive_sponsor}
+  - {company: "Coastline Denim", name: "F. Singh", email: "f.singh@example.com", title: "Technical Director", expected: technical_approver}
+
+  # --- Atlas Accessories ---
+  - {company: "Atlas Accessories", name: "G. Ito", email: "g.ito@example.com", title: "Sourcing Manager", expected: operational_champion}
+  - {company: "Atlas Accessories", name: "H. Costa", email: "h.costa@example.com", title: "President", expected: executive_sponsor}
+  - {company: "Atlas Accessories", name: "I. Nowak", email: "i.nowak@example.com", title: "Human Resources Manager", expected: excluded}
+
+  # --- Verdi Footwear ---
+  - {company: "Verdi Footwear", name: "J. Park", email: "j.park@example.com", title: "Merchandising Operations Manager", expected: operational_champion}
+  - {company: "Verdi Footwear", name: "K. Haddad", email: "k.haddad@example.com", title: "Managing Director", expected: executive_sponsor}
+  - {company: "Verdi Footwear", name: "L. Meyer", email: "l.meyer@example.com", title: "Head of Quality", expected: technical_approver}
+
+  # --- Nova Knitwear ---
+  - {company: "Nova Knitwear", name: "M. Flores", email: "m.flores@example.com", title: "Supply Chain Director", expected: operational_champion}
+  - {company: "Nova Knitwear", name: "N. Abbas", email: "n.abbas@example.com", title: "Chief Product Officer", expected: executive_sponsor}
+  - {company: "Nova Knitwear", name: "O. Reyes", email: "o.reyes@example.com", title: "Sustainability Manager", expected: compliance_stakeholder}
+
+  # --- Harbor & Pine ---
+  - {company: "Harbor & Pine", name: "P. Novak", email: "p.novak@example.com", title: "PLM Manager", expected: operational_champion}
+  - {company: "Harbor & Pine", name: "Q. Tan", email: "q.tan@example.com", title: "General Manager", expected: executive_sponsor}
+  - {company: "Harbor & Pine", name: "R. Idris", email: "r.idris@example.com", title: "Patternmaking Lead", expected: technical_approver}
+
+  # --- Solstice Swim ---
+  - {company: "Solstice Swim", name: "S. Weber", email: "s.weber@example.com", title: "Product Operations Lead", expected: operational_champion}
+  - {company: "Solstice Swim", name: "T. Ali", email: "t.ali@example.com", title: "Social Compliance Lead", expected: compliance_stakeholder}
+  - {company: "Solstice Swim", name: "U. Berg", email: "u.berg@example.com", title: "Finance Controller", expected: excluded}
+
+  # --- Lumen Activewear ---
+  - {company: "Lumen Activewear", name: "V. Roy", email: "v.roy@example.com", title: "Fit Technician", expected: technical_approver}
+  - {company: "Lumen Activewear", name: "W. Diaz", email: "w.diaz@example.com", title: "ESG Manager", expected: compliance_stakeholder}
+  - {company: "Lumen Activewear", name: "X. Bauer", email: "x.bauer@example.com", title: "Retail Store Manager", expected: excluded}
+  - {company: "Lumen Activewear", name: "Y. Kaur", email: "y.kaur@example.com", title: "Customer Service Lead", expected: excluded}

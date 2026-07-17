@@ -1,0 +1,16 @@
+# Deterministic account scoring. Validated by AccountScoringConfig.
+signal_weights:
+  industry_fit: 2.0
+  revenue_fit: 1.0
+  employee_fit: 1.0
+  high_style_or_sku_volume: 2.0
+  outsourced_or_distributed_suppliers: 2.0
+  seasonal_or_drop_based: 1.5
+  operational_complexity: 2.5
+  accessible_leadership: 1.0
+size_band_weights:
+  "25-50": 1.0
+  "51-200": 1.2
+  "201-500": 1.0
+qualify_threshold: 7.0
+review_threshold: 4.0
