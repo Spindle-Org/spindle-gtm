@@ -165,6 +165,30 @@ def test_apollo_cli_read_passthrough(cmd: str) -> None:
     assert _action("Bash", {"command": cmd}) == Action.PASSTHROUGH
 
 
+@pytest.mark.parametrize(
+    "cmd",
+    [
+        # Prose ABOUT Apollo (commit messages, echoes) is not an Apollo CLI invocation.
+        'git commit -m "feat(gateway): Apollo write gateway with sequence enroll deny"',
+        'echo "the Apollo enrollment flow is blocked"',
+        "git add src/spindle_gtm/apollo_gateway.py",
+    ],
+)
+def test_prose_mentioning_apollo_is_not_apollo_cli(cmd: str) -> None:
+    assert _action("Bash", {"command": cmd}) == Action.PASSTHROUGH
+
+
+@pytest.mark.parametrize(
+    "cmd",
+    [
+        "ls; apollo sequences add-contacts --id S",  # after separator: still caught
+        "true && apollo sequences approve --id S",
+    ],
+)
+def test_apollo_after_shell_separator_still_caught(cmd: str) -> None:
+    assert _action("Bash", {"command": cmd}) == Action.DENY
+
+
 # --- outbound apply requires an approved manifest ------------------------------
 def test_outbound_apply_without_manifest_denied() -> None:
     d = classify("Bash", {"command": "uv run spindle send --apply"}, manifest_ok=False)

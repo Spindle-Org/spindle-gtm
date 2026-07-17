@@ -149,8 +149,10 @@ def manifest_present(cwd: Path | str) -> bool:
 def _is_apollo(tool_name: str, command: str) -> bool:
     if "apollo" in tool_name.lower() and tool_name.startswith("mcp__"):
         return True
-    # Apollo CLI in a shell command (e.g. `apollo ...` or `apollo-cli ...`).
-    return bool(re.search(r"(?i)(?:^|[\s;&|])apollo(?:-cli)?\b", command))
+    # Apollo CLI invoked as a COMMAND: only at command position (start of command, or
+    # after ; | & && || $( or backtick) — NOT the word "apollo" appearing in prose such
+    # as a git commit message.
+    return bool(re.search(r"(?i)(?:^|[;&|]\s*|\$\(\s*|`\s*)apollo(?:-cli)?\b", command))
 
 
 def _classify_apollo(tool_name: str, command: str) -> Decision:
