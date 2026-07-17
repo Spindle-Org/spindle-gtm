@@ -119,6 +119,12 @@ class MessageRulesConfig(BaseModel):
     require_unsubscribe: bool = True
     require_physical_address: bool = True
     forbidden_phrases: list[str] = Field(default_factory=list)
+    # First-email word bounds and LinkedIn note cap (user-configurable).
+    first_email_min_words: int = 80
+    first_email_max_words: int = 130
+    linkedin_note_max_chars: int = 300
+    lead_ban_terms: list[str] = Field(default_factory=list)
+    spindle_one_liner: str = ""
 
 
 class PilotWedge(BaseModel):

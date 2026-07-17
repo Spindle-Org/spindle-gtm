@@ -5,11 +5,13 @@ db/**
 exports/**
 logs/**
 outbox/**
+generated/**
 !data/.gitkeep
 !db/.gitkeep
 !exports/.gitkeep
 !logs/.gitkeep
 !outbox/.gitkeep
+!generated/.gitkeep
 
 # SQLite files anywhere
 *.db

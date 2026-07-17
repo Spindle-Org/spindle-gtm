@@ -1,8 +1,8 @@
-"""initial domain model
+"""initial schema
 
-Revision ID: ab466d6a65e9
-Revises:
-Create Date: 2026-07-17 05:37:29.210798
+Revision ID: 9456e286f657
+Revises: 
+Create Date: 2026-07-17 06:11:05.080086
 """
 from __future__ import annotations
 
@@ -14,7 +14,7 @@ from alembic import op
 
 
 
-revision: str = 'ab466d6a65e9'
+revision: str = '9456e286f657'
 down_revision: str | None = None
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
@@ -37,10 +37,15 @@ def upgrade() -> None:
     sa.Column('region_code', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
     sa.Column('stage', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
     sa.Column('notes', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
+    sa.Column('qualification_override', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
+    sa.Column('active', sa.Boolean(), nullable=False),
+    sa.Column('sync_scope', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
+    sa.Column('last_synced_at', sa.DateTime(), nullable=True),
     sa.Column('status', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
     sa.PrimaryKeyConstraint('id')
     )
     with op.batch_alter_table('accounts', schema=None) as batch_op:
+        batch_op.create_index(batch_op.f('ix_accounts_active'), ['active'], unique=False)
         batch_op.create_index(batch_op.f('ix_accounts_apollo_id'), ['apollo_id'], unique=True)
         batch_op.create_index(batch_op.f('ix_accounts_domain'), ['domain'], unique=False)
         batch_op.create_index(batch_op.f('ix_accounts_region_code'), ['region_code'], unique=False)
@@ -93,6 +98,10 @@ def upgrade() -> None:
     sa.Column('source', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
     sa.Column('kind', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
     sa.Column('status', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
+    sa.Column('mode', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
+    sa.Column('workspace', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
+    sa.Column('scope_type', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
+    sa.Column('scope_value', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
     sa.Column('started_at', sa.DateTime(), nullable=False),
     sa.Column('finished_at', sa.DateTime(), nullable=True),
     sa.Column('stats_json', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
@@ -347,8 +356,13 @@ def upgrade() -> None:
     sa.Column('account_id', sa.Integer(), nullable=False),
     sa.Column('contact_id', sa.Integer(), nullable=False),
     sa.Column('action', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
+    sa.Column('linkedin_url', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
     sa.Column('suggested_text', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
     sa.Column('status', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
+    sa.Column('confirmed_title', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
+    sa.Column('observation', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
+    sa.Column('human_note', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
+    sa.Column('outcome', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
     sa.Column('completed_at', sa.DateTime(), nullable=True),
     sa.ForeignKeyConstraint(['account_id'], ['accounts.id'], ),
     sa.ForeignKeyConstraint(['contact_id'], ['contacts.id'], ),
@@ -393,16 +407,30 @@ def upgrade() -> None:
     sa.Column('created_at', sa.DateTime(), nullable=False),
     sa.Column('updated_at', sa.DateTime(), nullable=False),
     sa.Column('account_id', sa.Integer(), nullable=False),
+    sa.Column('contact_id', sa.Integer(), nullable=True),
     sa.Column('finding_id', sa.Integer(), nullable=True),
     sa.Column('claim', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
+    sa.Column('claim_type', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
     sa.Column('status', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
+    sa.Column('source_url', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
+    sa.Column('source_title', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
+    sa.Column('source_tier', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
+    sa.Column('published_date', sa.DateTime(), nullable=True),
+    sa.Column('retrieved_date', sa.DateTime(), nullable=True),
+    sa.Column('excerpt', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
+    sa.Column('confidence', sa.Float(), nullable=True),
+    sa.Column('freshness_score', sa.Float(), nullable=True),
+    sa.CheckConstraint("claim_type IN ('VERIFIED_FACT', 'REASONABLE_HYPOTHESIS', 'UNKNOWN')", name='ck_claim_type'),
     sa.CheckConstraint("status IN ('UNVERIFIED', 'VERIFIED', 'CONTRADICTED')", name='ck_claim_status'),
     sa.ForeignKeyConstraint(['account_id'], ['accounts.id'], ),
+    sa.ForeignKeyConstraint(['contact_id'], ['contacts.id'], ),
     sa.ForeignKeyConstraint(['finding_id'], ['research_findings.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
     with op.batch_alter_table('evidence_claims', schema=None) as batch_op:
         batch_op.create_index(batch_op.f('ix_evidence_claims_account_id'), ['account_id'], unique=False)
+        batch_op.create_index(batch_op.f('ix_evidence_claims_claim_type'), ['claim_type'], unique=False)
+        batch_op.create_index(batch_op.f('ix_evidence_claims_contact_id'), ['contact_id'], unique=False)
         batch_op.create_index(batch_op.f('ix_evidence_claims_status'), ['status'], unique=False)
 
     op.create_table('loi_records',
@@ -483,6 +511,8 @@ def downgrade() -> None:
     op.drop_table('loi_records')
     with op.batch_alter_table('evidence_claims', schema=None) as batch_op:
         batch_op.drop_index(batch_op.f('ix_evidence_claims_status'))
+        batch_op.drop_index(batch_op.f('ix_evidence_claims_contact_id'))
+        batch_op.drop_index(batch_op.f('ix_evidence_claims_claim_type'))
         batch_op.drop_index(batch_op.f('ix_evidence_claims_account_id'))
 
     op.drop_table('evidence_claims')
@@ -587,6 +617,7 @@ def downgrade() -> None:
         batch_op.drop_index(batch_op.f('ix_accounts_region_code'))
         batch_op.drop_index(batch_op.f('ix_accounts_domain'))
         batch_op.drop_index(batch_op.f('ix_accounts_apollo_id'))
+        batch_op.drop_index(batch_op.f('ix_accounts_active'))
 
     op.drop_table('accounts')
     # ### end Alembic commands ###

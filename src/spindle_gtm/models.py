@@ -69,6 +69,12 @@ class ClaimStatus(StrEnum):
     CONTRADICTED = "CONTRADICTED"
 
 
+class ClaimType(StrEnum):
+    VERIFIED_FACT = "VERIFIED_FACT"
+    REASONABLE_HYPOTHESIS = "REASONABLE_HYPOTHESIS"
+    UNKNOWN = "UNKNOWN"
+
+
 class SyncStatus(StrEnum):
     RUNNING = "RUNNING"
     SUCCESS = "SUCCESS"
@@ -195,11 +201,23 @@ class ResearchFinding(Base, table=True):
 class EvidenceClaim(Base, table=True):
     __tablename__ = "evidence_claims"
     account_id: int = Field(foreign_key="accounts.id", index=True)
+    contact_id: int | None = Field(default=None, foreign_key="contacts.id", index=True)
     finding_id: int | None = Field(default=None, foreign_key="research_findings.id")
     claim: str
+    claim_type: str = Field(default=ClaimType.UNKNOWN, index=True)
     status: str = Field(default=ClaimStatus.UNVERIFIED, index=True)
+    # Provenance required for any factual personalization claim.
+    source_url: str | None = None
+    source_title: str | None = None
+    source_tier: str | None = None
+    published_date: datetime | None = None
+    retrieved_date: datetime | None = None
+    excerpt: str | None = None
+    confidence: float | None = None
+    freshness_score: float | None = None
     __table_args__ = (
         CheckConstraint(f"status IN ({_states(ClaimStatus)})", name="ck_claim_status"),
+        CheckConstraint(f"claim_type IN ({_states(ClaimType)})", name="ck_claim_type"),
     )
 
 
@@ -218,9 +236,15 @@ class LinkedinManualTask(Base, table=True):
     __tablename__ = "linkedin_manual_tasks"
     account_id: int = Field(foreign_key="accounts.id", index=True)
     contact_id: int = Field(foreign_key="contacts.id", index=True)
-    action: str  # connect | message (MANUAL only — never automated)
-    suggested_text: str | None = None
+    action: str  # verify_role | connection_request (MANUAL only — never automated)
+    linkedin_url: str | None = None  # Apollo-provided URL, stored only
+    suggested_text: str | None = None  # generated connection note (human sends it)
     status: str = Field(default="pending")  # pending | done | skipped
+    # Human-entered results (the ONLY LinkedIn data used downstream).
+    confirmed_title: str | None = None
+    observation: str | None = None  # one professionally relevant observation
+    human_note: str | None = None
+    outcome: str | None = None  # SENT | ACCEPTED | DECLINED | NO_RESPONSE
     completed_at: datetime | None = None
 
 
