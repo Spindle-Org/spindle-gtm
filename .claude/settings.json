@@ -3,9 +3,36 @@
   "permissions": {
     "deny": [
       "Read(./.env)",
+      "Edit(./.env)",
+      "Write(./.env)",
+      "Read(./.env.*)",
+      "Edit(./.env.*)",
+      "Read(./.mcp.json)",
       "Read(./data/**)",
+      "Read(./db/**)",
       "Read(./exports/**)",
-      "Read(./db/**)"
+      "Read(./logs/**)",
+      "Read(~/.aws/**)",
+      "Read(~/.ssh/**)",
+      "Read(~/.config/gcloud/**)",
+      "Read(~/.netrc)",
+      "WebFetch(domain:linkedin.com)",
+      "WebFetch(domain:*.linkedin.com)",
+      "WebFetch(domain:lnkd.in)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash|Read|Edit|Write|NotebookEdit|MultiEdit|WebFetch|mcp__",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/pretooluse_guard.py\"",
+            "timeout": 15
+          }
+        ]
+      }
     ]
   }
 }
