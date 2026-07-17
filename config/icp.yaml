@@ -1,0 +1,34 @@
+# Ideal Customer Profile. Validated by qualification.schemas.ICPConfig.
+industries: [fashion, apparel, accessories, footwear]
+revenue:
+  currency: USD
+  min: 20000000       # ~USD 20M
+  max: 200000000      # ~USD 200M
+  uncertainty_allowed: true
+employees:
+  min: 25
+  max: 500
+  is_proxy: true       # headcount is a broad operating proxy, not a hard gate
+signals:
+  - high_style_or_sku_volume
+  - outsourced_or_distributed_suppliers
+  - seasonal_or_drop_based
+  - operational_complexity
+complexity_domains:
+  - email
+  - spreadsheets
+  - pdfs
+  - tech_packs
+  - samples
+  - costing
+  - fit
+  - approvals
+  - plm
+  - erp
+countries: [US, UK, EU, IN, MX, BR, CA, JP, KR]
+require_accessible_leadership: true
+notes: >
+  Fashion/apparel/accessories brands with high SKU or style volume, outsourced or
+  distributed suppliers, seasonal or drop-based product development, and operational
+  complexity across the product-ops stack. Revenue and headcount are proxies with
+  uncertainty allowed.

@@ -1,0 +1,10 @@
+# Evidence freshness windows (days) by source type. Validated by EvidenceConfig.
+freshness_days:
+  company_primary: 365
+  regulatory_official: 730
+  reputable_media: 180
+  apollo_firmographic: 180
+  social_professional: 120
+  aggregator_unverified: 60
+default_freshness_days: 180
+require_source_for_personalization: true

@@ -1,0 +1,120 @@
+# Title/persona rules + exclusions. Validated by PersonaRulesConfig.
+# Deterministic keyword matching; overlaps resolved by `priority` then `ambiguity_margin`.
+seniority_terms:
+  [chief, "c-suite", evp, svp, vp, "vice president", head, director, lead, principal, senior, manager]
+
+# Executive-sponsor weighting by company size (headcount band -> multiplier).
+# Small companies => founder/COO-first; large companies => de-weight execs vs champion.
+exec_size_weighting:
+  lt50: 1.5
+  "50-200": 1.0
+  gt200: 0.8
+
+ambiguity_margin: 1.0   # min score gap between top-2 personas to accept deterministically
+
+# Titles/functions that are NEVER initial-outreach targets (human override required).
+exclusion_titles:
+  - customer service
+  - customer support
+  - customer experience
+  - marketing
+  - brand marketing
+  - social media
+  - public relations
+  - influencer
+  - affiliate
+  - human resources
+  - "people ops"
+  - recruit
+  - talent acquisition
+  - legal
+  - counsel
+  - finance
+  - accounting
+  - controller
+  - bookkeep
+  - store manager
+  - retail associate
+  - sales associate
+  - cashier
+  - assistant
+  - intern
+  - apprentice
+  - receptionist
+  - trainee
+  - consultant
+  - contractor
+  - freelance
+  - advisor
+
+personas:
+  operational_champion:
+    priority: 30
+    weight: 1.0
+    title_keywords:
+      - product development
+      - "product dev"
+      - production
+      - sourcing
+      - technical design
+      - garment technology
+      - "garment tech"
+      - product operations
+      - "product ops"
+      - merchandising operations
+      - "merch ops"
+      - supply chain
+      - plm
+      - "tech pack"
+      - materials
+      - costing
+      - "vendor management"
+    function_keywords: [product, production, sourcing, "supply chain", operations, merchandising]
+    seniority: [manager, lead, head, director, senior]
+  executive_sponsor:
+    priority: 20
+    weight: 1.0
+    title_keywords:
+      - "chief operating officer"
+      - coo
+      - president
+      - "managing director"
+      - "chief product officer"
+      - cpo
+      - founder
+      - "co-founder"
+      - "chief executive officer"
+      - ceo
+      - "general manager"
+      - owner
+    function_keywords: [executive, leadership, "general management"]
+    seniority: [chief, president, founder, "managing director", "general manager", vp]
+  technical_approver:
+    priority: 25
+    weight: 1.0
+    title_keywords:
+      - patternmaking
+      - "pattern maker"
+      - "fit technician"
+      - "fit specialist"
+      - quality
+      - "qa"
+      - "qc"
+      - product technology
+      - "technical director"
+    function_keywords: [technical, quality, fit, pattern]
+    seniority: [manager, lead, head, senior, director]
+  compliance_stakeholder:
+    priority: 15
+    weight: 1.0
+    title_keywords:
+      - compliance
+      - sustainability
+      - "social compliance"
+      - "sourcing compliance"
+      - ethical
+      - "responsible sourcing"
+      - esg
+      - traceability
+    function_keywords: [compliance, sustainability, esg]
+    seniority: [manager, lead, head, director]

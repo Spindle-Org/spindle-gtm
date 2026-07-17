@@ -1,0 +1,7 @@
+# Suppression rules. Validated by SuppressionRulesConfig.
+# NOTE: keep example.com OUT of suppressed_domains — fixtures use it.
+suppressed_domains: []
+role_address_localparts:
+  [info, sales, support, admin, contact, hello, help, noreply, "no-reply", careers, jobs, marketing, press, privacy, legal, billing, accounts, team, office]
+block_role_addresses: true
+honor_unsub_events: true

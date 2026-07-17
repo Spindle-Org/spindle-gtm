@@ -1,0 +1,20 @@
+# Research source hierarchy (trust 0..1). Validated by ResearchSourcesConfig.
+hierarchy:
+  - name: company_primary
+    trust: 0.95
+    examples: ["company website", "careers page", "product catalog", "about page"]
+  - name: regulatory_official
+    trust: 0.90
+    examples: ["company filings", "official registries"]
+  - name: reputable_media
+    trust: 0.75
+    examples: ["trade press", "business of fashion", "retail trade media"]
+  - name: apollo_firmographic
+    trust: 0.70
+    examples: ["apollo enrichment"]
+  - name: social_professional
+    trust: 0.50
+    examples: ["public professional profiles"]
+  - name: aggregator_unverified
+    trust: 0.30
+    examples: ["directories", "unverified aggregators"]

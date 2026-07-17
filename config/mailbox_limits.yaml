@@ -1,0 +1,7 @@
+# Per-mailbox sending limits. Validated by MailboxLimitsConfig.
+default_daily_cap: 20
+max_daily_cap: 40
+warmup_days: 14
+warmup_start_cap: 5
+min_seconds_between_sends: 90
+per_contact_frequency_days: 30

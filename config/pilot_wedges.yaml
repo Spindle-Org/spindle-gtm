@@ -1,0 +1,22 @@
+# Pilot wedges: pain -> narrow entry offer. Validated by PilotWedgesConfig.
+wedges:
+  - key: techpack_chaos
+    pain: "Tech packs and revisions scattered across email, PDFs, and spreadsheets."
+    wedge: "One source of truth for tech packs with change history."
+    signals: [tech_packs, spreadsheets, pdfs, operational_complexity]
+  - key: sample_tracking
+    pain: "Sample rounds and approvals lose the thread across vendors."
+    wedge: "Sample + approval tracking across distributed suppliers."
+    signals: [samples, approvals, outsourced_or_distributed_suppliers]
+  - key: costing_visibility
+    pain: "Costing lives in spreadsheets and drifts from the BOM."
+    wedge: "Live costing tied to the BOM and materials."
+    signals: [costing, spreadsheets]
+  - key: drop_calendar
+    pain: "Seasonal/drop calendars slip when handoffs are manual."
+    wedge: "Drop/season calendar with critical-path visibility."
+    signals: [seasonal_or_drop_based, high_style_or_sku_volume]
+  - key: plm_erp_gap
+    pain: "PLM/ERP exists but day-to-day still runs in email and Excel."
+    wedge: "Lightweight layer bridging PLM/ERP to daily product ops."
+    signals: [plm, erp, operational_complexity]

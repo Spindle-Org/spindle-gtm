@@ -1,0 +1,14 @@
+# Outreach message rules. Validated by MessageRulesConfig.
+max_subject_chars: 90
+max_body_words: 150
+max_links: 1
+require_unsubscribe: true
+require_physical_address: true
+forbidden_phrases:
+  - "act now"
+  - "limited time"
+  - "free money"
+  - "risk-free"
+  - "100% guaranteed"
+  - "dear sir/madam"
+  - "to whom it may concern"

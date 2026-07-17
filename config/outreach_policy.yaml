@@ -1,0 +1,60 @@
+# Country/regional outreach policy. Validated by OutreachPolicyConfig.
+# cold_email_allowed MUST be quoted ("yes"/"no"/"caution") — bare yes/no are YAML booleans.
+countries:
+  US:
+    region_code: US
+    legal_basis: CAN-SPAM
+    cold_email_allowed: "yes"
+    requires_consent: false
+    preferred_channel: email
+  UK:
+    region_code: UK
+    legal_basis: GDPR+PECR
+    cold_email_allowed: "caution"
+    requires_consent: false
+    preferred_channel: email
+    notes: "Legitimate interest; LIA note; role-based addresses."
+  EU:
+    region_code: EU
+    legal_basis: GDPR+PECR
+    cold_email_allowed: "caution"
+    requires_consent: false
+    preferred_channel: email
+    notes: "Selected Europe; legitimate interest basis."
+  CA:
+    region_code: CA
+    legal_basis: CASL
+    cold_email_allowed: "caution"
+    requires_consent: true
+    preferred_channel: linkedin_manual
+  IN:
+    region_code: IN
+    legal_basis: DPDP
+    cold_email_allowed: "caution"
+    requires_consent: true
+    preferred_channel: linkedin_manual
+  MX:
+    region_code: MX
+    legal_basis: LFPDPPP
+    cold_email_allowed: "caution"
+    requires_consent: true
+    preferred_channel: email
+  BR:
+    region_code: BR
+    legal_basis: LGPD
+    cold_email_allowed: "caution"
+    requires_consent: true
+    preferred_channel: email
+    notes: "Representative for Latin America; confirm per-country before send."
+  JP:
+    region_code: JP
+    legal_basis: APPI
+    cold_email_allowed: "caution"
+    requires_consent: true
+    preferred_channel: linkedin_manual
+  KR:
+    region_code: KR
+    legal_basis: PIPA
+    cold_email_allowed: "no"
+    requires_consent: true
+    preferred_channel: linkedin_manual
