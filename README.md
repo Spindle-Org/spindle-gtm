@@ -2,40 +2,48 @@
 Built for another level of out reach.
 
 A local, single-founder GTM engine: research the first 25–50 accounts, gate compliance,
-and send human-approved outreach — converting to 3–5 signed LOIs for a free pilot, **without**
-an unsafe high-volume automation system.
+and prepare human-approved outreach — converting to signed LOIs for a free pilot, **without**
+an unsafe high-volume automation system. Apollo is the read-only system of record; every
+external write flows through one audited, human-approved gateway.
 
-Full design: **[docs/IMPLEMENTATION_PLAN.md](docs/IMPLEMENTATION_PLAN.md)** ·
-ADRs: [0001 architecture](docs/adr/0001-architecture.md),
-[0002 external-action safety](docs/adr/0002-external-action-safety.md).
-
-## Stack
-Python 3.12 + [uv](https://docs.astral.sh/uv/) · Typer CLI · SQLModel / SQLAlchemy 2 · Alembic ·
-Pydantic v2 · Streamlit (local dashboard) · ruff · mypy · pytest · pre-commit.
-
-## Safety invariants (non-negotiable — see ADR-0002)
-- **Apollo is the system of record and READ-ONLY** from this tool. Never written back.
-- **No send without `--apply` AND a human batch-approval gate.** CLI is dry-run by default.
-- **No LinkedIn automation** — manual, human-in-the-loop only.
-- **Compliance gate per region**; **suppression wins over everything**.
-- **PII stays local.** `data/`, `db/`, `exports/`, `.env*`, `.csv` are gitignored; a guard +
-  CI fail on real-looking emails or exports. Test emails use `example.com`.
-
-## Quickstart
+## Quickstart (macOS)
 ```sh
-uv sync
-cp .env.example .env                       # fill in secrets; never commit .env
-uv run alembic upgrade head                # create local db/spindle.db (gitignored)
-uv run spindle --help
-uv run spindle regions                     # list region compliance policies
-uv run spindle gate CA --unsubscribe --physical-address
-uv run streamlit run src/spindle_gtm/dashboard.py
+brew install uv gh
+git clone https://github.com/Spindle-Org/spindle-gtm.git && cd spindle-gtm
+make setup                 # uv sync + pre-commit
+cp .env.example .env        # fill in; never commit
+make migrate               # create local db/spindle.db (gitignored)
+make doctor                # read-only preflight
+make run                   # synthetic end-to-end demo (no external writes)
+make dashboard             # local Streamlit review dashboard
 ```
+Full setup (Apollo CLI/MCP, env vars, migrations): **[docs/SETUP.md](docs/SETUP.md)**.
 
-## Develop
-```sh
-uv run ruff format . && uv run ruff check . && uv run mypy && uv run pytest
-uv run pre-commit install                  # enable local hooks
-```
-Also enable GitHub **secret scanning + push protection** (Settings → Security).
-Work in small commits on a feature branch; never push directly to `main`.
+## Make targets
+| Target | What |
+|--------|------|
+| `make setup` | install deps + git hooks |
+| `make check` | ruff format check + lint + mypy |
+| `make test` | pytest suite |
+| `make run` | synthetic end-to-end demo (no external writes) |
+| `make verify` | full release gate |
+| `make dashboard` | Streamlit review dashboard |
+| `make doctor` | read-only preflight |
+| `make migrate` | apply DB migrations |
+
+## Safety invariants (non-negotiable — see [ADR-0002](docs/adr/0002-external-action-safety.md))
+- **Apollo is read-only** except through the single audited write gateway; **no send without
+  hash-bound approval + a typed `SEND <count> <batch-id>` confirmation**, and real writes stay
+  blocked until the rollout runbook is signed off.
+- **No LinkedIn automation** — manual tasks only.
+- **Compliance + suppression + account-lock rechecks** before every apply; region gates fail closed.
+- **PII stays local** — `data/`/`db/`/`exports/`/`logs/`/`outbox/`/`.env*`/`.csv` are gitignored;
+  a guard + CI fail on real-looking emails or exports. Test emails use `example.com`.
+
+## Docs
+- Design: [IMPLEMENTATION_PLAN](docs/IMPLEMENTATION_PLAN.md) · ADRs [0001](docs/adr/0001-architecture.md)/[0002](docs/adr/0002-external-action-safety.md) · [Apollo capabilities](docs/APOLLO_CAPABILITIES.md)
+- Governance: [docs/runbooks/governance.md](docs/runbooks/governance.md)
+- Operate: [daily](docs/runbooks/daily-operator.md) · [campaign launch](docs/runbooks/campaign-launch.md) · [reply triage](docs/runbooks/reply-triage.md) · [region compliance](docs/runbooks/region-compliance.md)
+- Safety ops: [incident & kill switch](docs/runbooks/incident-kill-switch.md) · [suppression & objection](docs/runbooks/suppression-objection.md) · [backup & retention](docs/runbooks/backup-retention.md) · [rollback](docs/runbooks/rollback.md)
+- Ship: [outbound rollout](docs/runbooks/outbound-rollout.md) · [first-real-send checklist](docs/runbooks/first-real-send-checklist.md) · [GitHub & release](docs/runbooks/github-and-release.md)
+- The full build/operate/verify prompt pack: [docs/Spindle_GTM_Claude_Code_Prompt_Pack.md](docs/Spindle_GTM_Claude_Code_Prompt_Pack.md)
