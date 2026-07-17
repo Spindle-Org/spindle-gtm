@@ -17,6 +17,7 @@ dependencies = [
 
 [project.scripts]
 spindle = "spindle_gtm.cli:app"
+spindle-gtm = "spindle_gtm.cli:app"
 
 [build-system]
 requires = ["hatchling"]

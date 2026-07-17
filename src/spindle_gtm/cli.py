@@ -55,6 +55,25 @@ def version() -> None:
 
 
 @app.command()
+def doctor() -> None:
+    """Read-only preflight: Apollo CLI/auth/MCP, DB, config, no PII/secrets, kill switch.
+
+    Consumes no Apollo credits and never modifies Apollo.
+    """
+    from spindle_gtm.doctor import run_all
+
+    results = run_all()
+    for r in results:
+        mark = "OK  " if r.ok else "FAIL"
+        typer.echo(f"[{mark}] {r.name}: {r.detail}")
+    failed = [r.name for r in results if not r.ok]
+    if failed:
+        typer.secho(f"\n{len(failed)} check(s) failed: {', '.join(failed)}", fg=typer.colors.RED)
+        raise typer.Exit(code=1)
+    typer.secho("\nAll checks passed.", fg=typer.colors.GREEN)
+
+
+@app.command()
 def regions() -> None:
     """List the seeded region compliance policies."""
     for code, policy in sorted(load_region_policies().items()):
