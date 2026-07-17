@@ -160,6 +160,11 @@ class MailboxLimitsConfig(BaseModel):
     warmup_start_cap: int = 5
     min_seconds_between_sends: int = 90
     per_contact_frequency_days: int = 30
+    # Open/click tracking is DISABLED by default; only an explicitly allow-listed
+    # experiment key may enable it (gates.tracking_allowed).
+    open_tracking_default: bool = False
+    click_tracking_default: bool = False
+    tracking_experiment_allowlist: list[str] = Field(default_factory=list)
 
     @model_validator(mode="after")
     def _check(self) -> MailboxLimitsConfig:

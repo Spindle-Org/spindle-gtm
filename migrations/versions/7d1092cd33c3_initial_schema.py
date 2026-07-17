@@ -1,8 +1,8 @@
 """initial schema
 
-Revision ID: 9456e286f657
-Revises:
-Create Date: 2026-07-17 06:11:05.080086
+Revision ID: 7d1092cd33c3
+Revises: 
+Create Date: 2026-07-17 06:25:40.583378
 """
 from __future__ import annotations
 
@@ -14,7 +14,7 @@ from alembic import op
 
 
 
-revision: str = '9456e286f657'
+revision: str = '7d1092cd33c3'
 down_revision: str | None = None
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
@@ -50,6 +50,37 @@ def upgrade() -> None:
         batch_op.create_index(batch_op.f('ix_accounts_domain'), ['domain'], unique=False)
         batch_op.create_index(batch_op.f('ix_accounts_region_code'), ['region_code'], unique=False)
 
+    op.create_table('audit_log',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('created_at', sa.DateTime(), nullable=False),
+    sa.Column('updated_at', sa.DateTime(), nullable=False),
+    sa.Column('actor', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
+    sa.Column('action', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
+    sa.Column('entity_type', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
+    sa.Column('entity_id', sa.Integer(), nullable=False),
+    sa.Column('detail', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
+    sa.PrimaryKeyConstraint('id')
+    )
+    with op.batch_alter_table('audit_log', schema=None) as batch_op:
+        batch_op.create_index(batch_op.f('ix_audit_log_action'), ['action'], unique=False)
+        batch_op.create_index(batch_op.f('ix_audit_log_entity_id'), ['entity_id'], unique=False)
+
+    op.create_table('edit_history',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('created_at', sa.DateTime(), nullable=False),
+    sa.Column('updated_at', sa.DateTime(), nullable=False),
+    sa.Column('entity_type', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
+    sa.Column('entity_id', sa.Integer(), nullable=False),
+    sa.Column('field', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
+    sa.Column('old_value', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
+    sa.Column('new_value', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
+    sa.Column('editor', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
+    sa.PrimaryKeyConstraint('id')
+    )
+    with op.batch_alter_table('edit_history', schema=None) as batch_op:
+        batch_op.create_index(batch_op.f('ix_edit_history_entity_id'), ['entity_id'], unique=False)
+        batch_op.create_index(batch_op.f('ix_edit_history_entity_type'), ['entity_type'], unique=False)
+
     op.create_table('experiments',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('created_at', sa.DateTime(), nullable=False),
@@ -70,7 +101,10 @@ def upgrade() -> None:
     sa.Column('name', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
     sa.Column('status', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
     sa.Column('region_scope', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
-    sa.CheckConstraint("status IN ('DRAFT', 'REVIEW', 'APPROVED', 'APPLIED', 'CANCELLED')", name='ck_batch_status'),
+    sa.Column('sender_mailbox', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
+    sa.Column('schedule', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
+    sa.Column('sequence_ref', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
+    sa.CheckConstraint("status IN ('DRAFTED', 'REVIEWED', 'APPROVED', 'APPLIED', 'CANCELLED')", name='ck_batch_status'),
     sa.PrimaryKeyConstraint('id')
     )
     with op.batch_alter_table('outreach_batches', schema=None) as batch_op:
@@ -247,6 +281,8 @@ def upgrade() -> None:
     sa.Column('contact_id', sa.Integer(), nullable=False),
     sa.Column('role', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
     sa.Column('seniority', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
+    sa.Column('rationale', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
+    sa.Column('confidence', sa.Float(), nullable=True),
     sa.ForeignKeyConstraint(['account_id'], ['accounts.id'], ),
     sa.ForeignKeyConstraint(['contact_id'], ['contacts.id'], ),
     sa.PrimaryKeyConstraint('id'),
@@ -291,6 +327,25 @@ def upgrade() -> None:
     with op.batch_alter_table('approvals', schema=None) as batch_op:
         batch_op.create_index(batch_op.f('ix_approvals_manifest_id'), ['manifest_id'], unique=False)
 
+    op.create_table('compliance_decisions',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('created_at', sa.DateTime(), nullable=False),
+    sa.Column('updated_at', sa.DateTime(), nullable=False),
+    sa.Column('contact_id', sa.Integer(), nullable=True),
+    sa.Column('batch_id', sa.Integer(), nullable=True),
+    sa.Column('decision', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
+    sa.Column('reason_codes_json', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
+    sa.Column('context', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
+    sa.CheckConstraint("decision IN ('ALLOW', 'REVIEW', 'BLOCK')", name='ck_gate_decision'),
+    sa.ForeignKeyConstraint(['batch_id'], ['outreach_batches.id'], ),
+    sa.ForeignKeyConstraint(['contact_id'], ['contacts.id'], ),
+    sa.PrimaryKeyConstraint('id')
+    )
+    with op.batch_alter_table('compliance_decisions', schema=None) as batch_op:
+        batch_op.create_index(batch_op.f('ix_compliance_decisions_batch_id'), ['batch_id'], unique=False)
+        batch_op.create_index(batch_op.f('ix_compliance_decisions_contact_id'), ['contact_id'], unique=False)
+        batch_op.create_index(batch_op.f('ix_compliance_decisions_decision'), ['decision'], unique=False)
+
     op.create_table('contact_scores',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('created_at', sa.DateTime(), nullable=False),
@@ -319,7 +374,7 @@ def upgrade() -> None:
     sa.Column('gate_result', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
     sa.Column('status', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
     sa.Column('send_ready_at', sa.DateTime(), nullable=True),
-    sa.CheckConstraint("status IN ('DRAFT', 'SEND_READY', 'HELD', 'SENT')", name='ck_draft_status'),
+    sa.CheckConstraint("status IN ('DRAFT', 'REVIEWED', 'APPROVED', 'REJECTED', 'SEND_READY', 'HELD', 'SENT')", name='ck_draft_status'),
     sa.ForeignKeyConstraint(['account_id'], ['accounts.id'], ),
     sa.ForeignKeyConstraint(['batch_id'], ['outreach_batches.id'], ),
     sa.ForeignKeyConstraint(['contact_id'], ['contacts.id'], ),
@@ -420,6 +475,7 @@ def upgrade() -> None:
     sa.Column('excerpt', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
     sa.Column('confidence', sa.Float(), nullable=True),
     sa.Column('freshness_score', sa.Float(), nullable=True),
+    sa.Column('human_approved', sa.Boolean(), nullable=True),
     sa.CheckConstraint("claim_type IN ('VERIFIED_FACT', 'REASONABLE_HYPOTHESIS', 'UNKNOWN')", name='ck_claim_type'),
     sa.CheckConstraint("status IN ('UNVERIFIED', 'VERIFIED', 'CONTRADICTED')", name='ck_claim_status'),
     sa.ForeignKeyConstraint(['account_id'], ['accounts.id'], ),
@@ -545,6 +601,12 @@ def downgrade() -> None:
         batch_op.drop_index(batch_op.f('ix_contact_scores_contact_id'))
 
     op.drop_table('contact_scores')
+    with op.batch_alter_table('compliance_decisions', schema=None) as batch_op:
+        batch_op.drop_index(batch_op.f('ix_compliance_decisions_decision'))
+        batch_op.drop_index(batch_op.f('ix_compliance_decisions_contact_id'))
+        batch_op.drop_index(batch_op.f('ix_compliance_decisions_batch_id'))
+
+    op.drop_table('compliance_decisions')
     with op.batch_alter_table('approvals', schema=None) as batch_op:
         batch_op.drop_index(batch_op.f('ix_approvals_manifest_id'))
 
@@ -613,6 +675,16 @@ def downgrade() -> None:
         batch_op.drop_index(batch_op.f('ix_experiments_key'))
 
     op.drop_table('experiments')
+    with op.batch_alter_table('edit_history', schema=None) as batch_op:
+        batch_op.drop_index(batch_op.f('ix_edit_history_entity_type'))
+        batch_op.drop_index(batch_op.f('ix_edit_history_entity_id'))
+
+    op.drop_table('edit_history')
+    with op.batch_alter_table('audit_log', schema=None) as batch_op:
+        batch_op.drop_index(batch_op.f('ix_audit_log_entity_id'))
+        batch_op.drop_index(batch_op.f('ix_audit_log_action'))
+
+    op.drop_table('audit_log')
     with op.batch_alter_table('accounts', schema=None) as batch_op:
         batch_op.drop_index(batch_op.f('ix_accounts_region_code'))
         batch_op.drop_index(batch_op.f('ix_accounts_domain'))

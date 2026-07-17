@@ -49,8 +49,8 @@ class AccountLockState(StrEnum):
 
 
 class BatchStatus(StrEnum):
-    DRAFT = "DRAFT"
-    REVIEW = "REVIEW"
+    DRAFTED = "DRAFTED"
+    REVIEWED = "REVIEWED"
     APPROVED = "APPROVED"
     APPLIED = "APPLIED"
     CANCELLED = "CANCELLED"
@@ -58,9 +58,18 @@ class BatchStatus(StrEnum):
 
 class DraftStatus(StrEnum):
     DRAFT = "DRAFT"
+    REVIEWED = "REVIEWED"
+    APPROVED = "APPROVED"
+    REJECTED = "REJECTED"
     SEND_READY = "SEND_READY"
     HELD = "HELD"
     SENT = "SENT"
+
+
+class GateDecision(StrEnum):
+    ALLOW = "ALLOW"
+    REVIEW = "REVIEW"  # legal/human review required before send
+    BLOCK = "BLOCK"
 
 
 class ClaimStatus(StrEnum):
@@ -155,8 +164,10 @@ class AccountContactRole(Base, table=True):
     __tablename__ = "account_contact_roles"
     account_id: int = Field(foreign_key="accounts.id", index=True)
     contact_id: int = Field(foreign_key="contacts.id", index=True)
-    role: str  # decision_maker | champion | influencer | blocker
+    role: str  # champion | sponsor | technical_approver | rejected | ...
     seniority: str | None = None
+    rationale: str | None = None  # selection/rejection reason for the review dashboard
+    confidence: float | None = None
     __table_args__ = (
         UniqueConstraint("account_id", "contact_id", "role", name="uq_account_contact_role"),
     )
@@ -215,6 +226,7 @@ class EvidenceClaim(Base, table=True):
     excerpt: str | None = None
     confidence: float | None = None
     freshness_score: float | None = None
+    human_approved: bool | None = None  # explicit human sign-off shown on the dashboard
     __table_args__ = (
         CheckConstraint(f"status IN ({_states(ClaimStatus)})", name="ck_claim_status"),
         CheckConstraint(f"claim_type IN ({_states(ClaimType)})", name="ck_claim_type"),
@@ -267,8 +279,11 @@ class EmailDraft(Base, table=True):
 class OutreachBatch(Base, table=True):
     __tablename__ = "outreach_batches"
     name: str
-    status: str = Field(default=BatchStatus.DRAFT, index=True)  # defaults to DRAFT
+    status: str = Field(default=BatchStatus.DRAFTED, index=True)  # defaults to DRAFTED
     region_scope: str | None = None
+    sender_mailbox: str | None = None
+    schedule: str | None = None  # e.g. ISO start time or named schedule
+    sequence_ref: str | None = None  # sequence name or 'one-off'
     __table_args__ = (
         CheckConstraint(f"status IN ({_states(BatchStatus)})", name="ck_batch_status"),
     )
@@ -375,6 +390,40 @@ class AccountLock(Base, table=True):
     __table_args__ = (
         CheckConstraint(f"state IN ({_states(AccountLockState)})", name="ck_lock_state"),
     )
+
+
+# --- governance: decisions, edits, audit ---------------------------------------
+class ComplianceDecision(Base, table=True):
+    """Compliance decision log with reason codes (operational risk control)."""
+
+    __tablename__ = "compliance_decisions"
+    contact_id: int | None = Field(default=None, foreign_key="contacts.id", index=True)
+    batch_id: int | None = Field(default=None, foreign_key="outreach_batches.id", index=True)
+    decision: str = Field(index=True)  # ALLOW | REVIEW | BLOCK
+    reason_codes_json: str  # JSON list of reason codes
+    context: str | None = None  # e.g. 'pre_send' | 'pre_apply_recheck'
+    __table_args__ = (
+        CheckConstraint(f"decision IN ({_states(GateDecision)})", name="ck_gate_decision"),
+    )
+
+
+class EditHistory(Base, table=True):
+    __tablename__ = "edit_history"
+    entity_type: str = Field(index=True)  # email_draft | outreach_batch | ...
+    entity_id: int = Field(index=True)
+    field: str
+    old_value: str | None = None
+    new_value: str | None = None
+    editor: str
+
+
+class AuditLog(Base, table=True):
+    __tablename__ = "audit_log"
+    actor: str
+    action: str = Field(index=True)  # reviewed | approved | approval_revoked | apply_confirmed ...
+    entity_type: str
+    entity_id: int = Field(index=True)
+    detail: str | None = None
 
 
 # --- discovery -> pilot -> LOI -------------------------------------------------
