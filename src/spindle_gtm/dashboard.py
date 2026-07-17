@@ -11,7 +11,7 @@ from sqlalchemy import func
 from sqlmodel import select
 
 from spindle_gtm.db import make_engine, session_scope
-from spindle_gtm.models import Account, Batch, Contact
+from spindle_gtm.models import Account, Contact, OutreachBatch
 
 
 def _counts_by_status(model: type) -> dict[str, int]:
@@ -30,7 +30,7 @@ def render() -> None:
     try:
         accounts = _counts_by_status(Account)
         contacts = _counts_by_status(Contact)
-        batches = _counts_by_status(Batch)
+        batches = _counts_by_status(OutreachBatch)
     except Exception as exc:  # noqa: BLE001 — surface an empty-DB hint, not a stack trace
         st.info(f"No data yet (run `spindle` first). Details: {exc}")
         return
