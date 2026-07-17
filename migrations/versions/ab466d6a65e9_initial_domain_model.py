@@ -1,7 +1,7 @@
 """initial domain model
 
 Revision ID: ab466d6a65e9
-Revises: 
+Revises:
 Create Date: 2026-07-17 05:37:29.210798
 """
 from __future__ import annotations
