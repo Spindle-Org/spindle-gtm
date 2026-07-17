@@ -46,7 +46,7 @@ _CRED_RE = re.compile(
     r"""(?ix)
     ( \.env\b(?!\.example)          # .env, .env.local — but not .env.example
     | \.mcp\.json\b(?!\.example)
-    | credentials?(?:\.json|/|\b)
+    | credentials?(?:\.json|\.ya?ml|\.txt|\.ini|/)   # a credential FILE/dir, not the bare word
     | (?:^|/)\.aws/
     | (?:^|/)\.ssh/
     | (?:^|/)\.gnupg/
