@@ -169,6 +169,114 @@ def sync_accounts(
             )
 
 
+outbound_app = typer.Typer(
+    help="Apollo write gateway (the ONLY write path). Dry-run by default.", no_args_is_help=True
+)
+app.add_typer(outbound_app, name="outbound")
+
+
+def _load_batch_and_manifests(batch_id: int):  # type: ignore[no-untyped-def]
+    from sqlmodel import select
+
+    from spindle_gtm.models import ExternalActionManifest, OutreachBatch
+
+    def inner(session):  # type: ignore[no-untyped-def]
+        batch = session.get(OutreachBatch, batch_id)
+        if batch is None:
+            typer.secho(f"no batch {batch_id}", fg=typer.colors.RED)
+            raise typer.Exit(code=1)
+        manifests = list(
+            session.exec(
+                select(ExternalActionManifest).where(
+                    ExternalActionManifest.batch_id == batch_id,
+                    ExternalActionManifest.action_type.startswith("apollo:"),
+                )
+            )
+        )
+        return batch, manifests
+
+    return inner
+
+
+@outbound_app.command("plan")
+def outbound_plan(batch: int = typer.Option(..., "--batch")) -> None:
+    """Build immutable per-write manifests for the batch (no Apollo access)."""
+    from spindle_gtm.apollo_gateway import default_writes_for_batch, plan_writes
+    from spindle_gtm.db import session_scope
+
+    with session_scope() as session:
+        b, _ = _load_batch_and_manifests(batch)(session)
+        writes = default_writes_for_batch(session, b)
+        manifests = plan_writes(session, b, writes)
+        session.commit()
+        typer.echo(f"planned {len(manifests)} write(s) for batch {batch}")
+        for m in manifests:
+            typer.echo(f"  {m.action_type} idem={m.idempotency_key[:12]}…")
+
+
+@outbound_app.command("verify")
+def outbound_verify(batch: int = typer.Option(..., "--batch")) -> None:
+    """Re-validate approval, gates, caps, IDs, and kill switch. Never writes."""
+    from spindle_gtm.apollo_gateway import verify_outbound
+    from spindle_gtm.db import session_scope
+
+    with session_scope() as session:
+        b, manifests = _load_batch_and_manifests(batch)(session)
+        report = verify_outbound(session, b, manifests)
+        session.commit()
+        for err in report.errors:
+            typer.echo(f"  FAIL {err}")
+        if report.ok:
+            typer.secho("verify OK", fg=typer.colors.GREEN)
+        else:
+            typer.secho(f"{len(report.errors)} check(s) failed", fg=typer.colors.RED)
+            raise typer.Exit(code=1)
+
+
+@outbound_app.command("apply")
+def outbound_apply(
+    batch: int = typer.Option(..., "--batch"),
+    confirm: str = typer.Option("", "--confirm", help='Type: "SEND <count> <batch-id>"'),
+) -> None:
+    """Apply planned writes via the gateway (real client is gated by the rollout runbook)."""
+    from spindle_gtm.apollo_gateway import GatewayError, RealApolloClient, execute_outbound
+    from spindle_gtm.db import session_scope
+
+    with session_scope() as session:
+        b, manifests = _load_batch_and_manifests(batch)(session)
+        if not confirm:
+            report = execute_outbound(session, b, manifests, RealApolloClient(), dry_run=True)
+            typer.echo(
+                f"[dry-run] {len(manifests)} write(s); {report.skipped_duplicates} already "
+                "applied. Pass --confirm to execute."
+            )
+            return
+        try:
+            report = execute_outbound(
+                session, b, manifests, RealApolloClient(), dry_run=False, typed_confirm=confirm
+            )
+        except (GatewayError, NotImplementedError) as exc:
+            typer.secho(str(exc), fg=typer.colors.RED)
+            raise typer.Exit(code=1) from None
+        session.commit()
+        typer.echo(
+            f"applied={report.applied} skipped={report.skipped_duplicates} failed={report.failed}"
+        )
+
+
+@outbound_app.command("cancel")
+def outbound_cancel(batch: int = typer.Option(..., "--batch")) -> None:
+    """Cancel the batch and all not-yet-applied manifests."""
+    from spindle_gtm.apollo_gateway import cancel_outbound
+    from spindle_gtm.db import session_scope
+
+    with session_scope() as session:
+        b, manifests = _load_batch_and_manifests(batch)(session)
+        n = cancel_outbound(session, b, manifests)
+        session.commit()
+        typer.echo(f"cancelled batch {batch} ({n} pending manifest(s))")
+
+
 @app.command()
 def ingest(ctx: typer.Context) -> None:
     """Ingest the Apollo seed company list (Phase 1). External + human-approved."""
