@@ -1,0 +1,44 @@
+name: CI
+
+# CI runs offline w.r.t. external systems: it must NEVER access Apollo, send email,
+# or require production credentials. No secrets are referenced here by design.
+on:
+  push:
+    branches: [main, "feat/**"]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+
+      - name: Set up Python
+        run: uv python install
+
+      - name: Sync (frozen)
+        run: uv sync --frozen
+
+      - name: Ruff format check
+        run: uv run ruff format --check .
+
+      - name: Ruff lint
+        run: uv run ruff check .
+
+      - name: Mypy
+        run: uv run mypy
+
+      - name: PII / export guard
+        run: uv run python scripts/check_no_pii.py
+
+      - name: Tests
+        run: uv run pytest

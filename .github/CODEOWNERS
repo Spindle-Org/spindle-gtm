@@ -1,0 +1,8 @@
+# Default owners for everything in this repo.
+* @metaayush
+
+# Safety-critical areas require founder review.
+/src/spindle_gtm/compliance.py   @metaayush
+/src/spindle_gtm/security.py     @metaayush
+/config/region_policy.toml       @metaayush
+/docs/adr/                       @metaayush
