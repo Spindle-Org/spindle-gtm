@@ -7,6 +7,7 @@ are intentionally NOT wired up in this foundation.
 
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass
 
 import typer
@@ -104,6 +105,68 @@ def gate(
     )
     verdict = "PASS" if result.passed else "HOLD"
     typer.echo(f"{verdict}: {result.reason}")
+
+
+sync_app = typer.Typer(help="Read-only Apollo synchronization.", no_args_is_help=True)
+app.add_typer(sync_app, name="sync")
+
+
+@sync_app.command("accounts")
+def sync_accounts(
+    ctx: typer.Context,
+    list_name: str = typer.Option(None, "--list", help="Apollo account list name (scope label)."),
+    stage: str = typer.Option(None, "--stage", help="Apollo account stage (scope label)."),
+    csv_path: str = typer.Option(None, "--csv", help="Mode A: path to an Apollo CSV export."),
+    workspace: str = typer.Option(None, "--workspace", help="Apollo workspace label."),
+    manifest: int = typer.Option(None, "--manifest", help="Manifest id to apply."),
+    dry_run: bool = typer.Option(
+        False, "--dry-run", help="Compute + persist a sync diff (default)."
+    ),
+) -> None:
+    """Sync accounts from Apollo (read-only). Dry-run by default; --apply needs --manifest."""
+    from pathlib import Path
+
+    from spindle_gtm.db import session_scope
+    from spindle_gtm.sync import CsvAccountSource, SyncScope, apply_sync, plan_sync
+
+    state: State = ctx.obj
+    if list_name:
+        scope_type, scope_value = "list", list_name
+    elif stage:
+        scope_type, scope_value = "stage", stage
+    elif csv_path:
+        scope_type, scope_value = "csv", csv_path
+    else:
+        typer.secho("Provide --list, --stage, or --csv.", fg=typer.colors.RED)
+        raise typer.Exit(code=1)
+
+    if not csv_path:
+        typer.secho(
+            "Mode A needs an export: pass --csv <apollo_export.csv>. (Mode B API sync is "
+            "gated on Apollo plan/credentials and is not wired for CLI reads yet.)",
+            fg=typer.colors.YELLOW,
+        )
+        raise typer.Exit(code=1)
+
+    scope = SyncScope(mode="A", scope_type=scope_type, scope_value=scope_value, workspace=workspace)
+    source = CsvAccountSource(Path(csv_path), scope)
+
+    with session_scope() as session:
+        if state.apply:
+            if manifest is None:
+                typer.secho("--apply requires --manifest <id>.", fg=typer.colors.RED)
+                raise typer.Exit(code=1)
+            run = apply_sync(session, source, manifest)
+            session.commit()
+            typer.echo(f"applied: {run.stats_json}")
+        else:
+            diff, mf = plan_sync(session, source)
+            session.commit()
+            typer.echo(json.dumps(diff.summary(scope), indent=2))
+            typer.secho(
+                f"\nmanifest id: {mf.id} — apply with: --apply --manifest {mf.id}",
+                fg=typer.colors.GREEN,
+            )
 
 
 @app.command()

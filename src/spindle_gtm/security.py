@@ -19,6 +19,10 @@ ALLOWED_EMAIL_DOMAINS = ("example.com", "example.org", "example.net")
 # the PII scan — their placeholder emails are not our data and we must not rewrite them.
 _VENDORED_PREFIXES = (".claude/skills/apollo-cli/",)
 
+# Approved synthetic-fixture locations: a .csv here is scanned for emails (must be
+# example.com) rather than rejected outright as an Apollo export.
+_FIXTURE_PREFIXES = ("tests/fixtures/",)
+
 # Text files worth scanning for emails; everything else is skipped as binary/noise.
 _SCANNABLE_SUFFIXES = {
     ".py",
@@ -59,10 +63,12 @@ def scan_paths(paths: list[Path], repo_root: Path | None = None) -> list[str]:
         full = path if path.is_absolute() else repo_root / path
         if not full.is_file():
             continue
-        if full.suffix.lower() == ".csv":
+        suffix = full.suffix.lower()
+        is_fixture = any(str(path).startswith(prefix) for prefix in _FIXTURE_PREFIXES)
+        if suffix == ".csv" and not is_fixture:
             violations.append(f"{path}: raw .csv (treated as an Apollo/contact export)")
             continue
-        if full.suffix.lower() not in _SCANNABLE_SUFFIXES:
+        if suffix not in _SCANNABLE_SUFFIXES and not (suffix == ".csv" and is_fixture):
             continue
         try:
             text = full.read_text(encoding="utf-8")

@@ -163,7 +163,7 @@ def guard_before_apply(session: Session, draft: EmailDraft) -> None:
 
 
 # --- note-preserving sync ------------------------------------------------------
-_HUMAN_FIELDS = frozenset({"notes"})
+_HUMAN_FIELDS = frozenset({"notes", "qualification_override"})
 
 
 def upsert_account(session: Session, incoming: dict[str, Any]) -> Account:

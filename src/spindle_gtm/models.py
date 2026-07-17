@@ -101,6 +101,10 @@ class SyncRun(Base, table=True):
     source: str = Field(default="apollo", index=True)
     kind: str  # accounts | contacts | activities | ...
     status: str = Field(default=SyncStatus.RUNNING)
+    mode: str | None = None  # A | B
+    workspace: str | None = None
+    scope_type: str | None = None  # list | stage | csv | saved_view | api
+    scope_value: str | None = None
     started_at: datetime = Field(default_factory=utcnow)
     finished_at: datetime | None = None
     stats_json: str | None = None
@@ -118,6 +122,10 @@ class Account(SourcedBase, table=True):
     region_code: str | None = Field(default=None, index=True)
     stage: str | None = None
     notes: str | None = None  # human-authored — never overwritten by sync
+    qualification_override: str | None = None  # human decision — never overwritten by sync
+    active: bool = Field(default=True, index=True)  # sync marks inactive, never deletes
+    sync_scope: str | None = None  # list/stage this account was synced from
+    last_synced_at: datetime | None = None
     status: str = Field(default="pulled")
 
 

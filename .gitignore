@@ -31,6 +31,8 @@ credentials*.json
 
 # CSV exports (Apollo pulls, contact lists)
 *.csv
+# ...except approved synthetic fixtures (example.com only; scanned by the PII guard)
+!tests/fixtures/*.csv
 
 # === Python ===
 __pycache__/
