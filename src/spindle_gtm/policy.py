@@ -84,24 +84,36 @@ _BROWSER_AUTOMATION_RE = re.compile(
 # --- shell fetchers (used to detect LinkedIn scraping via curl/wget/etc.) --------
 _FETCHER_RE = re.compile(r"(?ix)\b(curl|wget|http|https|httpie|xh|lynx|links)\b")
 
-# --- Apollo verb classification -------------------------------------------------
+# --- Apollo verb classification (see docs/APOLLO_CAPABILITIES.md) ----------------
+# Matched against a NORMALIZED haystack ('_' and '-' -> space) so word boundaries work
+# for both MCP tool names (apollo_people_match) and CLI commands (people bulk-enrich).
+# Order of evaluation: send/enroll (DENY) -> credit (ASK) -> write (ASK) -> read.
 _APOLLO_SEND_ENROLL_RE = re.compile(
-    r"(?ix)"
-    r"send_now|send_email|_send\b|email_send|"
-    r"sequenc|enroll|"
-    r"campaigns?_add|add_contact|campaigns?_approve|campaigns?_remove|"
-    r"messages_create|messages_send"
+    r"(?i)"
+    r"send now|send email|email send|messages send|messages create|\bsend\b|"
+    r"enroll|add contacts?|campaigns? add|\bapprove\b"
 )
+# CREDIT-CONSUMING: enrichment / email-or-phone reveal / person match. Approval-required.
+_APOLLO_CREDIT_RE = re.compile(r"(?i)enrich|\bmatch\b|reveal|people email")
+# WRITE (CRM mutation / purchase). Approval-required.
 _APOLLO_WRITE_RE = re.compile(
-    r"(?ix)"
-    r"create|update|delete|bulk_create|purchase|_log\b|"
-    r"add_entity|remove_entity|complete|skip|import|upload"
+    r"(?i)"
+    r"create|update|delete|purchase|\blog\b|import|upload|"
+    r"add entity|remove entity|complete|skip|remove contacts?|campaigns? remove|remove or stop"
 )
+# READ (no credits, no mutation). Defer to normal permission flow.
 _APOLLO_READ_RE = re.compile(
-    r"(?ix)"
-    r"search|index|show|enrich|match|job_postings|"
-    r"stats|profile|sync_report|schedules|result_show|show_product|show_profile"
+    r"(?i)"
+    r"search|\bindex\b|\bshow\b|\bget\b|\blist\b|employees|\bjobs\b|\bnews\b|"
+    r"schedules|job postings|sync report|result show|show product|show profile|"
+    r"\bwhoami\b|\bauth\b|\blogin\b|\blogout\b|\bhelp\b|\bversion\b|"
+    r"usage|credits|\bprofile\b|stats|analytics|email accounts|\busers\b"
 )
+
+
+def _normalize(text: str) -> str:
+    return re.sub(r"[_\-]+", " ", text.lower())
+
 
 # --- git add/commit of forbidden content ----------------------------------------
 _GIT_ADDCOMMIT_RE = re.compile(r"(?ix)\bgit\s+(add|commit)\b")
@@ -142,13 +154,20 @@ def _is_apollo(tool_name: str, command: str) -> bool:
 
 
 def _classify_apollo(tool_name: str, command: str) -> Decision:
-    haystack = f"{tool_name} {command}"
+    haystack = _normalize(f"{tool_name} {command}")
     if _APOLLO_SEND_ENROLL_RE.search(haystack):
         return Decision(
             Action.DENY,
             "apollo-send-or-enroll",
-            "Apollo email-send / sequence-enrollment is denied (no direct send path; "
-            "sends require an approved batch manifest — docs/adr/0002).",
+            "Apollo email-send / sequence-enrollment is BLOCKED during development "
+            "(outbound kill switch — docs/adr/0002, docs/APOLLO_CAPABILITIES.md).",
+            is_external_write=True,
+        )
+    if _APOLLO_CREDIT_RE.search(haystack):
+        return Decision(
+            Action.ASK,
+            "apollo-credit",
+            "Apollo enrichment/reveal consumes credits — explicit human approval required.",
             is_external_write=True,
         )
     if _APOLLO_WRITE_RE.search(haystack):

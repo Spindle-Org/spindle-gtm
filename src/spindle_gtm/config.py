@@ -19,6 +19,10 @@ class Settings(BaseSettings):
     apollo_api_key: str = Field(default="", alias="APOLLO_API_KEY")
     apollo_seed_list_id: str = Field(default="", alias="APOLLO_SEED_LIST_ID")
 
+    # Outbound kill switch. False = outbound DISABLED (killed) — the safe default during
+    # development. Doctor asserts this stays engaged; flipping it is a deliberate later step.
+    outbound_enabled: bool = Field(default=False, alias="OUTBOUND_ENABLED")
+
     sender_name: str = Field(default="", alias="SENDER_NAME")
     sender_company: str = Field(default="", alias="SENDER_COMPANY")
     sender_postal_address: str = Field(default="", alias="SENDER_POSTAL_ADDRESS")

@@ -114,6 +114,57 @@ def test_apollo_cli_write_asks() -> None:
     assert _action("Bash", {"command": "apollo contacts create --name x"}) == Action.ASK
 
 
+# --- Apollo credit-consuming actions (enrich / reveal / match) => ASK -----------
+@pytest.mark.parametrize(
+    "tool",
+    [
+        "mcp__apollo__apollo_organizations_enrich",
+        "mcp__apollo__apollo_organizations_bulk_enrich",
+        "mcp__apollo__apollo_people_match",
+        "mcp__apollo__apollo_people_bulk_match",
+    ],
+)
+def test_apollo_credit_mcp_asks(tool: str) -> None:
+    d = classify(tool, {})
+    assert d.action == Action.ASK and d.category == "apollo-credit" and d.is_external_write
+
+
+@pytest.mark.parametrize(
+    "cmd",
+    [
+        "apollo people enrich --email ada@example.com",
+        "apollo people bulk-enrich --emails ada@example.com",
+        "apollo companies enrich --domain example.com",
+        "apollo people email --id X123",
+    ],
+)
+def test_apollo_credit_cli_asks(cmd: str) -> None:
+    assert classify("Bash", {"command": cmd}).category == "apollo-credit"
+
+
+# --- Apollo sends/enrollment (CLI) => DENY; safe reads => passthrough -----------
+@pytest.mark.parametrize(
+    "cmd",
+    ["apollo sequences add-contacts --id S --contact-id C", "apollo sequences approve --id S"],
+)
+def test_apollo_cli_send_denied(cmd: str) -> None:
+    assert _action("Bash", {"command": cmd}) == Action.DENY
+
+
+@pytest.mark.parametrize(
+    "cmd",
+    [
+        "apollo auth whoami",
+        "apollo usage credits",
+        "apollo sequences search --query welcome",
+        "apollo people search --title CTO",
+        "apollo email-accounts list",
+    ],
+)
+def test_apollo_cli_read_passthrough(cmd: str) -> None:
+    assert _action("Bash", {"command": cmd}) == Action.PASSTHROUGH
+
+
 # --- outbound apply requires an approved manifest ------------------------------
 def test_outbound_apply_without_manifest_denied() -> None:
     d = classify("Bash", {"command": "uv run spindle send --apply"}, manifest_ok=False)
