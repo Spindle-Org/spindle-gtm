@@ -9,3 +9,6 @@ per_contact_frequency_days: 30
 open_tracking_default: false
 click_tracking_default: false
 tracking_experiment_allowlist: []
+# Outbound gateway hard caps.
+max_contacts_per_account: 2
+max_batch_size: 50

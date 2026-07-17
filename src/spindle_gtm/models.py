@@ -136,6 +136,7 @@ class Account(SourcedBase, table=True):
     hq_country: str | None = None
     region_code: str | None = Field(default=None, index=True)
     stage: str | None = None
+    commercial_stage: str | None = Field(default=None, index=True)  # progression.py stages
     notes: str | None = None  # human-authored — never overwritten by sync
     qualification_override: str | None = None  # human decision — never overwritten by sync
     active: bool = Field(default=True, index=True)  # sync marks inactive, never deletes
@@ -269,6 +270,8 @@ class EmailDraft(Base, table=True):
     body: str | None = None
     evidence_claim_ids_json: str | None = None
     gate_result: str | None = None
+    variant: str | None = Field(default=None, index=True)  # account-level experiment variant
+    trigger_type: str | None = None  # verified_trigger | role_relevant
     status: str = Field(default=DraftStatus.DRAFT, index=True)
     send_ready_at: datetime | None = None
     __table_args__ = (
@@ -390,6 +393,18 @@ class AccountLock(Base, table=True):
     __table_args__ = (
         CheckConstraint(f"state IN ({_states(AccountLockState)})", name="ck_lock_state"),
     )
+
+
+class WorkTask(Base, table=True):
+    """Generic human work item (referral research, discovery prep, re-verification...)."""
+
+    __tablename__ = "work_tasks"
+    account_id: int | None = Field(default=None, foreign_key="accounts.id", index=True)
+    contact_id: int | None = Field(default=None, foreign_key="contacts.id", index=True)
+    kind: str = Field(index=True)  # research_referral | discovery_preparation | reverify_email...
+    detail: str | None = None
+    status: str = Field(default="pending")  # pending | done | skipped
+    completed_at: datetime | None = None
 
 
 # --- governance: decisions, edits, audit ---------------------------------------

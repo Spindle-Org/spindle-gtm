@@ -1,8 +1,8 @@
 """initial schema
 
-Revision ID: 7d1092cd33c3
-Revises:
-Create Date: 2026-07-17 06:25:40.583378
+Revision ID: 97251ea2fdfa
+Revises: 
+Create Date: 2026-07-17 06:38:04.068068
 """
 from __future__ import annotations
 
@@ -14,7 +14,7 @@ from alembic import op
 
 
 
-revision: str = '7d1092cd33c3'
+revision: str = '97251ea2fdfa'
 down_revision: str | None = None
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
@@ -36,6 +36,7 @@ def upgrade() -> None:
     sa.Column('hq_country', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
     sa.Column('region_code', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
     sa.Column('stage', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
+    sa.Column('commercial_stage', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
     sa.Column('notes', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
     sa.Column('qualification_override', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
     sa.Column('active', sa.Boolean(), nullable=False),
@@ -47,6 +48,7 @@ def upgrade() -> None:
     with op.batch_alter_table('accounts', schema=None) as batch_op:
         batch_op.create_index(batch_op.f('ix_accounts_active'), ['active'], unique=False)
         batch_op.create_index(batch_op.f('ix_accounts_apollo_id'), ['apollo_id'], unique=True)
+        batch_op.create_index(batch_op.f('ix_accounts_commercial_stage'), ['commercial_stage'], unique=False)
         batch_op.create_index(batch_op.f('ix_accounts_domain'), ['domain'], unique=False)
         batch_op.create_index(batch_op.f('ix_accounts_region_code'), ['region_code'], unique=False)
 
@@ -372,6 +374,8 @@ def upgrade() -> None:
     sa.Column('body', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
     sa.Column('evidence_claim_ids_json', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
     sa.Column('gate_result', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
+    sa.Column('variant', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
+    sa.Column('trigger_type', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
     sa.Column('status', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
     sa.Column('send_ready_at', sa.DateTime(), nullable=True),
     sa.CheckConstraint("status IN ('DRAFT', 'REVIEWED', 'APPROVED', 'REJECTED', 'SEND_READY', 'HELD', 'SENT')", name='ck_draft_status'),
@@ -385,6 +389,7 @@ def upgrade() -> None:
         batch_op.create_index(batch_op.f('ix_email_drafts_batch_id'), ['batch_id'], unique=False)
         batch_op.create_index(batch_op.f('ix_email_drafts_contact_id'), ['contact_id'], unique=False)
         batch_op.create_index(batch_op.f('ix_email_drafts_status'), ['status'], unique=False)
+        batch_op.create_index(batch_op.f('ix_email_drafts_variant'), ['variant'], unique=False)
 
     op.create_table('external_action_results',
     sa.Column('id', sa.Integer(), nullable=False),
@@ -456,6 +461,25 @@ def upgrade() -> None:
     )
     with op.batch_alter_table('research_findings', schema=None) as batch_op:
         batch_op.create_index(batch_op.f('ix_research_findings_account_id'), ['account_id'], unique=False)
+
+    op.create_table('work_tasks',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('created_at', sa.DateTime(), nullable=False),
+    sa.Column('updated_at', sa.DateTime(), nullable=False),
+    sa.Column('account_id', sa.Integer(), nullable=True),
+    sa.Column('contact_id', sa.Integer(), nullable=True),
+    sa.Column('kind', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
+    sa.Column('detail', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
+    sa.Column('status', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
+    sa.Column('completed_at', sa.DateTime(), nullable=True),
+    sa.ForeignKeyConstraint(['account_id'], ['accounts.id'], ),
+    sa.ForeignKeyConstraint(['contact_id'], ['contacts.id'], ),
+    sa.PrimaryKeyConstraint('id')
+    )
+    with op.batch_alter_table('work_tasks', schema=None) as batch_op:
+        batch_op.create_index(batch_op.f('ix_work_tasks_account_id'), ['account_id'], unique=False)
+        batch_op.create_index(batch_op.f('ix_work_tasks_contact_id'), ['contact_id'], unique=False)
+        batch_op.create_index(batch_op.f('ix_work_tasks_kind'), ['kind'], unique=False)
 
     op.create_table('evidence_claims',
     sa.Column('id', sa.Integer(), nullable=False),
@@ -572,6 +596,12 @@ def downgrade() -> None:
         batch_op.drop_index(batch_op.f('ix_evidence_claims_account_id'))
 
     op.drop_table('evidence_claims')
+    with op.batch_alter_table('work_tasks', schema=None) as batch_op:
+        batch_op.drop_index(batch_op.f('ix_work_tasks_kind'))
+        batch_op.drop_index(batch_op.f('ix_work_tasks_contact_id'))
+        batch_op.drop_index(batch_op.f('ix_work_tasks_account_id'))
+
+    op.drop_table('work_tasks')
     with op.batch_alter_table('research_findings', schema=None) as batch_op:
         batch_op.drop_index(batch_op.f('ix_research_findings_account_id'))
 
@@ -591,6 +621,7 @@ def downgrade() -> None:
 
     op.drop_table('external_action_results')
     with op.batch_alter_table('email_drafts', schema=None) as batch_op:
+        batch_op.drop_index(batch_op.f('ix_email_drafts_variant'))
         batch_op.drop_index(batch_op.f('ix_email_drafts_status'))
         batch_op.drop_index(batch_op.f('ix_email_drafts_contact_id'))
         batch_op.drop_index(batch_op.f('ix_email_drafts_batch_id'))
@@ -688,6 +719,7 @@ def downgrade() -> None:
     with op.batch_alter_table('accounts', schema=None) as batch_op:
         batch_op.drop_index(batch_op.f('ix_accounts_region_code'))
         batch_op.drop_index(batch_op.f('ix_accounts_domain'))
+        batch_op.drop_index(batch_op.f('ix_accounts_commercial_stage'))
         batch_op.drop_index(batch_op.f('ix_accounts_apollo_id'))
         batch_op.drop_index(batch_op.f('ix_accounts_active'))
 

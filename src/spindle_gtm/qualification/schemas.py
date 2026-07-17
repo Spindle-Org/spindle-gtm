@@ -165,6 +165,9 @@ class MailboxLimitsConfig(BaseModel):
     open_tracking_default: bool = False
     click_tracking_default: bool = False
     tracking_experiment_allowlist: list[str] = Field(default_factory=list)
+    # Outbound gateway hard caps.
+    max_contacts_per_account: int = 2
+    max_batch_size: int = 50
 
     @model_validator(mode="after")
     def _check(self) -> MailboxLimitsConfig:
