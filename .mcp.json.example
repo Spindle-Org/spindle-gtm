@@ -1,9 +1,0 @@
-{
-  "//": "Copy to .mcp.json (gitignored) and authenticate. Apollo is READ-ONLY per docs/adr/0002.",
-  "mcpServers": {
-    "apollo": {
-      "type": "http",
-      "url": "https://mcp.apollo.io/"
-    }
-  }
-}

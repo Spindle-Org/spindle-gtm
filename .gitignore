@@ -26,8 +26,8 @@ credentials*.json
 !*.example
 *token*.json
 *oauth*.json
-.mcp.json
-!.mcp.json.example
+# .mcp.json IS committed (project-scope remote MCP, URL-only). It must never contain
+# inline secrets — those belong in .env / the OAuth token store, never here.
 
 # CSV exports (Apollo pulls, contact lists)
 *.csv

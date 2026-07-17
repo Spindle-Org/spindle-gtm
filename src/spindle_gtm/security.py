@@ -15,6 +15,10 @@ from pathlib import Path
 EMAIL_RE = re.compile(r"[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}")
 ALLOWED_EMAIL_DOMAINS = ("example.com", "example.org", "example.net")
 
+# Vendored third-party files (official docs/skills we copy in verbatim) are exempt from
+# the PII scan — their placeholder emails are not our data and we must not rewrite them.
+_VENDORED_PREFIXES = (".claude/skills/apollo-cli/",)
+
 # Text files worth scanning for emails; everything else is skipped as binary/noise.
 _SCANNABLE_SUFFIXES = {
     ".py",
@@ -50,6 +54,8 @@ def scan_paths(paths: list[Path], repo_root: Path | None = None) -> list[str]:
     repo_root = repo_root or Path.cwd()
     violations: list[str] = []
     for path in paths:
+        if any(str(path).startswith(prefix) for prefix in _VENDORED_PREFIXES):
+            continue  # vendored official docs — not our data
         full = path if path.is_absolute() else repo_root / path
         if not full.is_file():
             continue
