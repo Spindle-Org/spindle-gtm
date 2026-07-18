@@ -37,6 +37,14 @@ exclusion_titles:
   - retail associate
   - sales associate
   - cashier
+  # Visual/store merchandising is display/retail, NOT product/buying merchandising —
+  # keep "Buying/Product/Chief Merchandising" targets, drop window-dressing roles.
+  - visual merchandising
+  - visual merchandiser
+  - vitrinista        # ES/PT: window dresser
+  - escaparatista     # ES: window dresser
+  - window dresser
+  - auxiliar          # ES/PT: assistant-level (e.g. "Auxiliar de Merchandising")
   - assistant
   - intern
   - apprentice

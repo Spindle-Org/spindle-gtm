@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import pytest
+from pydantic import ValidationError
+
 from spindle_gtm.qualification.loader import load_app_config
 from spindle_gtm.qualification.schemas import Persona
 
@@ -42,3 +45,21 @@ def test_thresholds_are_ordered() -> None:
     cfg = load_app_config()
     assert cfg.account_scoring.review_threshold <= cfg.account_scoring.qualify_threshold
     assert cfg.mailbox_limits.default_daily_cap <= cfg.mailbox_limits.max_daily_cap
+
+
+def test_every_seniority_term_has_a_bonus_key() -> None:
+    # Regression: a seniority term with no bonus key is detected but silently scores 0
+    # (e.g. spelled-out "vice president" losing 1.5 vs. "vp").
+    cfg = load_app_config()
+    bonus_keys = {k.lower() for k in cfg.contact_scoring.seniority_bonus}
+    missing = [t for t in cfg.personas.seniority_terms if t.lower() not in bonus_keys]
+    assert not missing, f"seniority_terms missing a bonus key: {missing}"
+
+
+def test_appconfig_rejects_seniority_term_without_bonus() -> None:
+    # The invariant must fail loudly at load, not silently score 0.
+    cfg = load_app_config()
+    bad = cfg.model_dump()
+    bad["personas"]["seniority_terms"] = [*cfg.personas.seniority_terms, "archduke"]
+    with pytest.raises(ValidationError, match="seniority_bonus key"):
+        type(cfg).model_validate(bad)
