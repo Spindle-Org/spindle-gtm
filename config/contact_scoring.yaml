@@ -6,11 +6,18 @@ persona_base_scores:
   compliance_stakeholder: 2.0
   excluded: 0.0
   unknown: 0.0
+# Every term in personas.yaml `seniority_terms` MUST have a key here, or it is
+# detected but silently scores 0 bonus (enforced by AppConfig validator).
 seniority_bonus:
   chief: 2.0
+  c-suite: 2.0
+  evp: 1.8
+  svp: 1.7
   vp: 1.5
+  vice president: 1.5
   director: 1.2
   head: 1.2
+  principal: 1.0
   lead: 0.8
   manager: 0.8
   senior: 0.5

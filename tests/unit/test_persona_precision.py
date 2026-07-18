@@ -41,3 +41,22 @@ def test_persona_precision_is_high() -> None:
     assert precision >= 0.9, f"precision {precision:.2f}; misses={misses}"
     # The deterministic classifier should decide the large majority without a resolver.
     assert predictions >= 0.9 * len(contacts)
+
+
+def test_visual_merchandising_is_excluded_but_product_merchandising_survives() -> None:
+    # Visual/store merchandising is display/retail, not the product/buying champion.
+    personas = load_app_config().personas
+    for title in [
+        "Visual Merchandising Manager",
+        "Head of Visual Merchandising & Store Experience",
+        "Vitrinista",
+        "Auxiliar de Merchandising",
+    ]:
+        assert classify_title(title, personas).persona == Persona.EXCLUDED, title
+    for title in [
+        "Chief Merchandising Officer",
+        "Buying and Merchandising Director",
+        "SVP Merchandising, Planning and Licensing",
+        "Head of Digital Merchandising",
+    ]:
+        assert classify_title(title, personas).persona == Persona.OPERATIONAL_CHAMPION, title

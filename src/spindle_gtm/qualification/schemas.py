@@ -196,3 +196,14 @@ class AppConfig(BaseModel):
     outreach_policy: OutreachPolicyConfig
     mailbox_limits: MailboxLimitsConfig
     suppression_rules: SuppressionRulesConfig
+
+    @model_validator(mode="after")
+    def _seniority_terms_have_bonus(self) -> AppConfig:
+        # A seniority term with no bonus key is detected but silently scores 0.
+        bonus_keys = {k.lower() for k in self.contact_scoring.seniority_bonus}
+        missing = [t for t in self.personas.seniority_terms if t.lower() not in bonus_keys]
+        if missing:
+            raise ValueError(
+                f"seniority_terms without a contact_scoring.seniority_bonus key: {missing}"
+            )
+        return self
