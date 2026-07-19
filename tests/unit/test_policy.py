@@ -94,6 +94,18 @@ def test_git_add_source_allowed() -> None:
     assert _action("Bash", {"command": "git add README.md"}) == Action.PASSTHROUGH
 
 
+def test_git_force_add_denied() -> None:
+    # Force-adding an otherwise-ignored file is denied even when the path itself
+    # matches no forbidden pattern.
+    assert _action("Bash", {"command": "git add -f notes.txt"}) == Action.DENY
+
+
+def test_git_commit_capital_f_allowed() -> None:
+    # -F/--file (read message from file) is not a force flag; the guard must not
+    # deny it via a case-insensitive -f match.
+    assert _action("Bash", {"command": "git commit -F .git/COMMIT_MSG"}) == Action.PASSTHROUGH
+
+
 # --- Apollo verb classification ------------------------------------------------
 def test_apollo_send_denied() -> None:
     d = classify("mcp__apollo__apollo_emailer_messages_send_now", {})

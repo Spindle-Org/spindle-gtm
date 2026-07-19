@@ -119,7 +119,7 @@ def _normalize(text: str) -> str:
 _GIT_ADDCOMMIT_RE = re.compile(r"(?ix)\bgit\s+(add|commit)\b")
 _GIT_FORBIDDEN_RE = re.compile(
     r"""(?ix)
-    ( -f\b | --force
+    ( (?-i:-f)\b | --force   # case-sensitive: force flag, not commit's -F/--file
     | (?:^|[\s'"=/])data/
     | (?:^|[\s'"=/])db/
     | (?:^|[\s'"=/])exports/
