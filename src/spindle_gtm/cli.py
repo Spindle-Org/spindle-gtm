@@ -277,6 +277,64 @@ def outbound_cancel(batch: int = typer.Option(..., "--batch")) -> None:
         typer.echo(f"cancelled batch {batch} ({n} pending manifest(s))")
 
 
+tracker_app = typer.Typer(
+    help="CRM outreach tracker: schema, blank template, and validation.",
+    no_args_is_help=True,
+)
+app.add_typer(tracker_app, name="tracker")
+
+
+@tracker_app.command("schema")
+def tracker_schema() -> None:
+    """Print the canonical tracker columns and the enums that gate filtering."""
+    from spindle_gtm.tracker import COLUMNS, ENUMS
+
+    typer.echo(f"{len(COLUMNS)} columns:")
+    for c in COLUMNS:
+        typer.echo(f"  {c}")
+    typer.echo("\nconstrained (filterable) fields:")
+    for col, allowed in ENUMS.items():
+        typer.echo(f"  {col}: {', '.join(sorted(v for v in allowed if v))}")
+
+
+@tracker_app.command("template")
+def tracker_template(
+    out: str = typer.Option(
+        "exports/outreach_tracker.csv", "--out", help="Where to write the blank tracker."
+    ),
+    no_example: bool = typer.Option(False, "--no-example", help="Header only, no sample row."),
+) -> None:
+    """Write a blank tracker (header + one example.com sample) ready to fill in."""
+    from pathlib import Path
+
+    from spindle_gtm.tracker import write_template
+
+    path = write_template(Path(out), with_example=not no_example)
+    typer.secho(f"wrote blank tracker → {path}", fg=typer.colors.GREEN)
+    typer.echo("Fill one row per contact, then: spindle-gtm tracker validate " + str(path))
+
+
+@tracker_app.command("validate")
+def tracker_validate(
+    path: str = typer.Argument(..., help="Path to a filled tracker CSV."),
+) -> None:
+    """Check a filled tracker against the schema + status enums + send-readiness."""
+    from pathlib import Path
+
+    from spindle_gtm.tracker import validate_csv
+
+    issues = validate_csv(Path(path))
+    if not issues:
+        typer.secho(
+            "tracker OK — schema, enums, and send-readiness all valid.", fg=typer.colors.GREEN
+        )
+        return
+    for issue in issues:
+        typer.secho(str(issue), fg=typer.colors.RED)
+    typer.secho(f"\n{len(issues)} issue(s).", fg=typer.colors.RED)
+    raise typer.Exit(code=1)
+
+
 @app.command()
 def ingest(ctx: typer.Context) -> None:
     """Ingest the Apollo seed company list (Phase 1). External + human-approved."""
